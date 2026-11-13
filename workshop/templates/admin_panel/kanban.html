@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Kanban-доска — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container-fluid" style="max-width:1500px">
+    <div class="page-head">
+      <div>
+        <h1>Kanban-доска заявок</h1>
+        <p>Перетащите карточку в другую колонку, чтобы изменить статус.</p>
+      </div>
+      <a class="btn btn-soft" href="{% url 'admin_requests' %}">Список заявок →</a>
+    </div>
+    {% include "admin_panel/_nav.html" with active="kanban" %}
+    <p class="kanban-hint">💡 Статус сохраняется сразу. Клиент получает e-mail-уведомление.</p>
+
+    <div class="kanban-board" data-kanban>
+      {% for column in columns %}
+        <section class="kanban-col" data-status="{{ column.status }}">
+          <div class="kanban-col-head">
+            <span>{{ column.label }}</span>
+            <span class="kanban-count">{{ column.requests|length }}</span>
+          </div>
+          <div class="kanban-cards">
+            {% for request in column.requests %}
+              <article class="kanban-card"
+                       draggable="true"
+                       data-id="{{ request.pk }}"
+                       data-status="{{ request.status }}"
+                       data-url="{% url 'kanban_move' request.pk %}">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <span class="kc-number">{{ request.number }}</span>
+                  <span class="badge-status {{ request.status_class }}" style="font-size:10px;padding:3px 7px">{{ request.get_status_display }}</span>
+                </div>
+                <div class="kc-device">{{ request.get_device_type_display }}{% if request.device_model %} · {{ request.device_model }}{% endif %}</div>
+                <div class="kc-meta">
+                  <span>{{ request.client.full_name }}</span>
+                  <span>{{ request.created_at|date:"d.m" }}</span>
+                </div>
+                <div class="kc-meta">
+                  <span>{{ request.master.full_name|default:"мастер не назначен" }}</span>
+                  <span>{{ request.total_cost|rub }}</span>
+                </div>
+                <a class="btn btn-sm btn-soft w-100 mt-2" draggable="false" href="{% url 'request_detail' request.pk %}">Открыть</a>
+              </article>
+            {% endfor %}
+            <div class="kanban-empty" {% if column.requests %}style="display:none"{% endif %}>Перетащите сюда</div>
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

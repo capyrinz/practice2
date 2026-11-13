@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Доступ запрещён — Мастер+{% endblock %}
+{% block content %}
+<div class="container page-shell" style="max-width:720px">
+  <div class="panel">
+    <div class="empty-state">
+      <div class="empty-icon">🔒</div>
+      <h3>Доступ запрещён</h3>
+      <p>У вашей учётной записи нет прав на этот раздел или заявку.</p>
+      <a class="btn btn-brand" href="{% url 'dashboard' %}">Вернуться в кабинет</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

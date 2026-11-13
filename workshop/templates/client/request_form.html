@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Новая заявка — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="breadcrumbs"><a href="{% url 'client_requests' %}">Мои заявки</a> / Новая заявка</div>
+    <div class="page-head">
+      <div>
+        <h1>Заявка на ремонт</h1>
+        <p>Опишите проблему как можно точнее — это ускорит диагностику.</p>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-main">
+        <form class="form-card" method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          <h2>Данные об устройстве</h2>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="{{ form.device_type.id_for_label }}">{{ form.device_type.label }} *</label>
+                {{ form.device_type }}{{ form.device_type.errors }}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label" for="{{ form.device_model.id_for_label }}">{{ form.device_model.label }}</label>
+                {{ form.device_model }}{{ form.device_model.errors }}
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="{{ form.service.id_for_label }}">{{ form.service.label }}</label>
+            {{ form.service }}
+            <div class="form-text">Можно не выбирать — услугу определит мастер после диагностики.</div>
+            {{ form.service.errors }}
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }} *</label>
+            {{ form.description }}
+            <div class="form-text">Минимум 10 символов. Укажите, когда и при каких условиях появляется проблема.</div>
+            {{ form.description.errors }}
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="{{ form.photo.id_for_label }}">{{ form.photo.label }}</label>
+            {{ form.photo }}
+            <div class="form-text">JPG, PNG или WebP, до 5 МБ. Фото поможет мастеру оценить повреждения.</div>
+            {{ form.photo.errors }}
+            <div class="photo-preview" id="photoPreview"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-brand px-4" type="submit">Отправить заявку</button>
+            <a class="btn btn-outline-secondary" href="{% url 'client_requests' %}">Отмена</a>
+          </div>
+        </form>
+      </div>
+      <aside class="detail-side">
+        <div class="panel">
+          <div class="panel-head"><h3>Что будет дальше?</h3></div>
+          <div class="panel-body">
+            <div class="timeline">
+              <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-title">Приём заявки</div><div class="timeline-text">Заявка появится в кабинете со статусом «Принята».</div></div>
+              <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-title">Диагностика</div><div class="timeline-text">Мастер проверит устройство и согласует стоимость.</div></div>
+              <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-title">Ремонт и выдача</div><div class="timeline-text">Следите за статусом и заберите готовое устройство.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-body">
+            <div class="fw-bold mb-2">📎 Приложите фото</div>
+            <p class="text-muted mb-0" style="font-size:13px">Снимок экрана, трещины, разъёма или шильдика с моделью заметно ускоряет работу мастера.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}

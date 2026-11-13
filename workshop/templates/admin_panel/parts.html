@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Склад запчастей — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Склад запчастей</h1>
+        <p>Остатки обновляются автоматически при списании на заявку.</p>
+      </div>
+      <a class="btn btn-brand" href="{% url 'part_create' %}">+ Добавить запчасть</a>
+    </div>
+    {% include "admin_panel/_nav.html" with active="parts" %}
+
+    <div class="kpi-grid cols-3">
+      <div class="kpi-card">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-label">Позиций в выборке</div>
+        <div class="kpi-value">{{ parts|length }}</div>
+        <div class="kpi-hint">стоимость остатка: {{ stock_value|rub }}</div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-label">Низкий остаток</div>
+        <div class="kpi-value">{{ low_count }}</div>
+        <div class="kpi-hint">по всем позициям</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🔎</div>
+        <div class="kpi-label">Фильтр</div>
+        <div class="kpi-hint mt-2">
+          <a class="btn btn-sm {% if low_only %}btn-brand{% else %}btn-soft{% endif %}" href="?low=1">Только дефицит</a>
+          {% if low_only %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'admin_parts' %}">Показать все</a>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel mb-4">
+      <div class="panel-body">
+        <form class="row g-2 align-items-end" method="get">
+          {% if low_only %}<input type="hidden" name="low" value="1">{% endif %}
+          <div class="col-md-8">
+            <label class="form-label" for="q">Поиск по названию или артикулу</label>
+            <input class="form-control" id="q" type="search" name="q" value="{{ query }}" placeholder="Например, экран iPhone или SKU-001">
+          </div>
+          <div class="col-md-4 d-flex gap-2">
+            <button class="btn btn-brand flex-fill" type="submit">Найти</button>
+            <a class="btn btn-outline-secondary" href="{% url 'admin_parts' %}">Сброс</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-responsive">
+        <table class="table-modern">
+          <thead><tr><th>Запчасть</th><th>Остаток</th><th>Мин.</th><th>Цена</th><th>Стоимость остатка</th><th>Статус</th><th></th></tr></thead>
+          <tbody>
+            {% for part in parts %}
+              <tr>
+                <td><div class="cell-strong">{{ part.name }}</div><div class="cell-muted">{{ part.sku }}</div></td>
+                <td class="{% if part.is_low_stock %}low-stock{% endif %}">{{ part.quantity }} шт.{% if part.is_low_stock %}<div class="cell-muted" style="font-size:11px">ниже минимума</div>{% endif %}</td>
+                <td>{{ part.min_quantity }}</td>
+                <td>{{ part.price|rub }}</td>
+                <td>{{ part.stock_value|rub }}</td>
+                <td>{% if part.is_active %}<span class="badge-soft green">в работе</span>{% else %}<span class="badge-soft red">снята</span>{% endif %}</td>
+                <td>
+                  <div class="row-actions">
+                    <a class="btn btn-sm btn-soft" href="{% url 'part_edit' part.pk %}">Изменить</a>
+                    <form method="post" action="{% url 'part_toggle' part.pk %}">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-secondary" type="submit">{% if part.is_active %}Снять{% else %}Вернуть{% endif %}</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📦</div><h3>Запчастей не найдено</h3><p>Добавьте позицию или измените фильтр.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

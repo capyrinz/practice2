@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Статус заявки {{ request.number }} — Мастер+{% endblock %}
+{% block content %}
+<div class="public-wrap">
+  <div class="public-header">
+    <div class="brand"><span class="brand-mark">М+</span><span class="brand-text">Мастер<span>+</span></span></div>
+    <p class="text-muted mb-0">Проверка статуса заявки по QR-коду</p>
+  </div>
+  <div class="public-card">
+    <div class="status-big">
+      <div>
+        <div class="text-muted" style="font-size:13px">Заявка</div>
+        <h1>{{ request.number }}</h1>
+      </div>
+      <span class="badge-status {{ request.status_class }}" style="font-size:14px;padding:8px 14px">{{ request.get_status_display }}</span>
+    </div>
+
+    <div class="mb-4">
+      {% include "partials/status_stepper.html" %}
+    </div>
+
+    <div class="info-grid mb-4">
+      <div class="info-item"><div class="label">Устройство</div><div class="value">{{ request.get_device_type_display }}{% if request.device_model %} · {{ request.device_model }}{% endif %}</div></div>
+      <div class="info-item"><div class="label">Мастер</div><div class="value">{{ request.master.full_name|default:"Назначается" }}</div></div>
+      <div class="info-item"><div class="label">Принята</div><div class="value">{{ request.created_at|date:"d.m.Y H:i" }}</div></div>
+      <div class="info-item"><div class="label">Ориентировочная стоимость</div><div class="value">{% if request.estimated_cost %}{{ request.estimated_cost|rub }}{% else %}Уточняется{% endif %}</div></div>
+    </div>
+
+    <h2 style="font-size:16px" class="mb-3">Ход ремонта</h2>
+    <div class="timeline">
+      {% for item in history %}
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-title">{{ item.get_status_display }}</div>
+          <div class="timeline-meta">{{ item.created_at|date:"d.m.Y H:i" }}</div>
+          {% if item.comment %}<div class="timeline-text">{{ item.comment }}</div>{% endif %}
+        </div>
+      {% empty %}
+        <p class="text-muted">История пока пуста.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <p class="public-note">
+    Публичная страница показывает только этапы ремонта. Полная информация и документы доступны
+    в <a href="{% url 'login' %}">личном кабинете</a>.
+  </p>
+</div>
+{% endblock %}

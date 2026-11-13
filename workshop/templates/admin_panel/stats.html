@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load static workshop_extras %}
+{% block title %}Статистика — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Статистика и аналитика</h1>
+        <p>Данные за последние 6 месяцев и за всё время работы мастерской.</p>
+      </div>
+      <a class="btn btn-soft" href="{% url 'admin_requests' %}">К заявкам</a>
+    </div>
+    {% include "admin_panel/_nav.html" with active="stats" %}
+
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-label">Всего заявок</div><div class="kpi-value">{{ total_requests }}</div><div class="kpi-hint">за всё время</div></div>
+      <div class="kpi-card accent"><div class="kpi-icon">✅</div><div class="kpi-label">Выдано</div><div class="kpi-value">{{ issued_count }}</div><div class="kpi-hint">завершённых ремонтов</div></div>
+      <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-label">Выручка</div><div class="kpi-value" style="font-size:22px">{{ revenue_total|rub }}</div><div class="kpi-hint">по выданным заявкам</div></div>
+      <div class="kpi-card warn"><div class="kpi-icon">📊</div><div class="kpi-label">Средний чек</div><div class="kpi-value" style="font-size:22px">{{ avg_cost|rub }}</div><div class="kpi-hint">работы + запчасти</div></div>
+    </div>
+
+    {% if low_stock %}
+      <div class="alert alert-warning">
+        <strong>Требуют закупки:</strong>
+        {% for part in low_stock %}{{ part.name }} ({{ part.quantity }} шт.){% if not forloop.last %}, {% endif %}{% endfor %}.
+        <a href="{% url 'admin_parts' %}?low=1">Открыть склад</a>
+      </div>
+    {% endif %}
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Количество заявок по месяцам</h3>
+        <div class="chart-sub">Последние 6 месяцев, по дате создания</div>
+        <div class="chart-box"><canvas id="requestsChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Выручка по месяцам</h3>
+        <div class="chart-sub">Работы и запчасти по выданным заявкам, ₽</div>
+        <div class="chart-box"><canvas id="revenueChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-grid three">
+      <div class="chart-card">
+        <h3>Популярные типы устройств</h3>
+        <div class="chart-sub">Распределение всех заявок</div>
+        <div class="chart-box short"><canvas id="devicesChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Популярные услуги</h3>
+        <div class="chart-sub">Топ-6 услуг по числу заявок</div>
+        <div class="chart-box short"><canvas id="servicesChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Загрузка мастеров</h3><span class="text-muted" style="font-size:13px">активные заявки / завершённые</span></div>
+      <div class="panel-body">
+        <div class="master-load">
+          {% for master in master_load %}
+            <div class="master-load-row">
+              <div style="min-width:180px">
+                <div class="fw-semibold" style="font-size:14px">{{ master.full_name }}</div>
+                <div class="cell-muted">{{ master.email|default:master.username }}</div>
+              </div>
+              <div class="load-bar"><span style="width: {% widthratio master.active max_load 100 %}%"></span></div>
+              <div class="load-count">{{ master.active }} / {{ master.done }}</div>
+            </div>
+          {% empty %}
+            <p class="text-muted mb-0">Мастеров пока нет.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+{{ labels|json_script:"chartLabels" }}
+{{ counts|json_script:"chartCounts" }}
+{{ revenue|json_script:"chartRevenue" }}
+{{ device_labels|json_script:"deviceLabels" }}
+{{ device_values|json_script:"deviceValues" }}
+{{ service_labels|json_script:"serviceLabels" }}
+{{ service_values|json_script:"serviceValues" }}
+<script>
+  function readJSON(id) {
+    return JSON.parse(document.getElementById(id).textContent);
+  }
+  Chart.defaults.font.family = '"Segoe UI", Inter, system-ui, sans-serif';
+  Chart.defaults.color = "#667085";
+  var grid = { color: "rgba(228,231,236,.8)" };
+  var labels = readJSON("chartLabels");
+
+  new Chart(document.getElementById("requestsChart"), {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Заявки",
+        data: readJSON("chartCounts"),
+        backgroundColor: "rgba(59,91,219,.82)",
+        borderRadius: 8,
+        maxBarThickness: 44
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: grid }, x: { grid: { display: false } } }
+    }
+  });
+
+  new Chart(document.getElementById("revenueChart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Выручка, ₽",
+        data: readJSON("chartRevenue"),
+        borderColor: "#0ea5a4",
+        backgroundColor: "rgba(14,165,164,.14)",
+        fill: true,
+        tension: .35,
+        pointRadius: 4,
+        pointBackgroundColor: "#0ea5a4",
+        borderWidth: 2.5
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: grid, ticks: { callback: function (v) { return v.toLocaleString("ru-RU") + " ₽"; } } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById("devicesChart"), {
+    type: "doughnut",
+    data: {
+      labels: readJSON("deviceLabels"),
+      datasets: [{
+        data: readJSON("deviceValues"),
+        backgroundColor: ["#3b5bdb", "#0ea5a4", "#f59e0b", "#8b5cf6", "#ef4444", "#94a3b8"],
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      cutout: "62%",
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 10, usePointStyle: true, padding: 14 } } }
+    }
+  });
+
+  new Chart(document.getElementById("servicesChart"), {
+    type: "bar",
+    data: {
+      labels: readJSON("serviceLabels"),
+      datasets: [{
+        label: "Заявки",
+        data: readJSON("serviceValues"),
+        backgroundColor: "rgba(14,165,164,.8)",
+        borderRadius: 7,
+        maxBarThickness: 34
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { precision: 0 }, grid: grid }, y: { grid: { display: false } } }
+    }
+  });
+</script>
+{% endblock %}

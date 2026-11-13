@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Назначение мастера — {{ request.number }}{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="breadcrumbs"><a href="{% url 'admin_requests' %}">Заявки</a> / <a href="{% url 'request_detail' request.pk %}">{{ request.number }}</a> / Назначение</div>
+    <div class="page-head">
+      <div>
+        <h1>Назначить мастера</h1>
+        <p>Заявка {{ request.number }} · {{ request.get_device_type_display }}{% if request.device_model %} {{ request.device_model }}{% endif %}</p>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-main">
+        <form class="form-card" method="post" novalidate>
+          {% csrf_token %}
+          <h2>Исполнитель и предварительная стоимость</h2>
+          <div class="form-group">
+            <label class="form-label" for="{{ form.master.id_for_label }}">{{ form.master.label }}</label>
+            {{ form.master }}
+            <div class="form-text">Список содержит только активных сотрудников с ролью «Мастер».</div>
+            {{ form.master.errors }}
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="{{ form.estimated_cost.id_for_label }}">{{ form.estimated_cost.label }}</label>
+            {{ form.estimated_cost }}
+            {{ form.estimated_cost.errors }}
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-brand" type="submit">Сохранить</button>
+            <a class="btn btn-outline-secondary" href="{% url 'request_detail' request.pk %}">Отмена</a>
+          </div>
+        </form>
+      </div>
+      <aside class="detail-side">
+        <div class="panel">
+          <div class="panel-head"><h3>Заявка</h3><span class="badge-status {{ request.status_class }}">{{ request.get_status_display }}</span></div>
+          <div class="panel-body">
+            <div class="info-item mb-3"><div class="label">Клиент</div><div class="value">{{ request.client.full_name }}</div></div>
+            <div class="info-item mb-3"><div class="label">Телефон</div><div class="value">{{ request.client.phone|default:"—" }}</div></div>
+            <div class="info-item mb-3"><div class="label">Текущий мастер</div><div class="value">{{ request.master.full_name|default:"не назначен" }}</div></div>
+            <div class="info-item"><div class="label">Описание</div><div class="timeline-text">{{ request.description }}</div></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}

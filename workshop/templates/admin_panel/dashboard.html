@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Панель администратора — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Панель управления</h1>
+        <p>Сводка по мастерской на {% now "d.m.Y" %}.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-brand" href="{% url 'admin_requests' %}">Все заявки</a>
+        <a class="btn btn-soft" href="{% url 'admin_kanban' %}">Kanban-доска</a>
+      </div>
+    </div>
+    {% include "admin_panel/_nav.html" with active="dashboard" %}
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">📋</div>
+        <div class="kpi-label">Всего заявок</div>
+        <div class="kpi-value">{{ requests_total }}</div>
+        <div class="kpi-hint">в активной работе: {{ requests_active }}</div>
+      </div>
+      <div class="kpi-card accent">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-label">Готовы к выдаче</div>
+        <div class="kpi-value">{{ ready_count }}</div>
+        <div class="kpi-hint">ожидают клиента</div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-icon">🧑‍🔧</div>
+        <div class="kpi-label">Мастера</div>
+        <div class="kpi-value">{{ masters_count }}</div>
+        <div class="kpi-hint">клиентов: {{ clients_count }}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Выручка по выданным</div>
+        <div class="kpi-value" style="font-size:23px">{{ revenue|rub }}</div>
+        <div class="kpi-hint">работы + запчасти</div>
+      </div>
+    </div>
+
+    {% if unassigned %}
+      <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span><strong>{{ unassigned }}</strong> активных заявок без мастера — назначьте исполнителя.</span>
+        <a class="btn btn-sm btn-brand" href="{% url 'admin_requests' %}">Перейти к заявкам</a>
+      </div>
+    {% endif %}
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="panel h-100">
+          <div class="panel-head">
+            <h2>Последние заявки</h2>
+            <a class="btn btn-sm btn-soft" href="{% url 'admin_requests' %}">Все заявки →</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table-modern">
+              <thead>
+                <tr><th>Заявка</th><th>Клиент</th><th>Устройство</th><th>Мастер</th><th>Статус</th><th></th></tr>
+              </thead>
+              <tbody>
+                {% for request in latest %}
+                  <tr>
+                    <td class="cell-strong">{{ request.number }}<div class="cell-muted">{{ request.created_at|date:"d.m.Y" }}</div></td>
+                    <td>{{ request.client.full_name }}</td>
+                    <td>{{ request.get_device_type_display }}{% if request.device_model %}<div class="cell-muted">{{ request.device_model }}</div>{% endif %}</td>
+                    <td>{{ request.master.full_name|default:"—" }}</td>
+                    <td><span class="badge-status {{ request.status_class }}">{{ request.get_status_display }}</span></td>
+                    <td><a class="btn btn-sm btn-soft" href="{% url 'request_detail' request.pk %}">Открыть</a></td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="6"><div class="empty-state">Заявок пока нет.</div></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="panel mb-4">
+          <div class="panel-head"><h2>Низкий остаток</h2><a class="btn btn-sm btn-soft" href="{% url 'admin_parts' %}?low=1">Склад →</a></div>
+          <div class="panel-body">
+            {% for part in low_stock %}
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                  <div class="fw-semibold" style="font-size:14px">{{ part.name }}</div>
+                  <div class="cell-muted">{{ part.sku }}</div>
+                </div>
+                <span class="badge-soft red">{{ part.quantity }} шт.</span>
+              </div>
+            {% empty %}
+              <p class="text-muted mb-0" style="font-size:14px">Все запчасти в достатке.</p>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Быстрые действия</h2></div>
+          <div class="panel-body d-grid gap-2">
+            <a class="btn btn-soft text-start" href="{% url 'service_create' %}">+ Добавить услугу</a>
+            <a class="btn btn-soft text-start" href="{% url 'part_create' %}">+ Добавить запчасть</a>
+            <a class="btn btn-soft text-start" href="{% url 'employee_create' %}">+ Добавить сотрудника</a>
+            <a class="btn btn-soft text-start" href="{% url 'admin_stats' %}">📈 Открыть статистику</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

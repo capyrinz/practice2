@@ -1,0 +1,10 @@
+<nav class="admin-nav" aria-label="Разделы панели администратора">
+  <a class="{% if active == 'dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">Обзор</a>
+  <a class="{% if active == 'requests' %}active{% endif %}" href="{% url 'admin_requests' %}">Заявки</a>
+  <a class="{% if active == 'kanban' %}active{% endif %}" href="{% url 'admin_kanban' %}">Kanban</a>
+  <a class="{% if active == 'services' %}active{% endif %}" href="{% url 'admin_services' %}">Услуги</a>
+  <a class="{% if active == 'parts' %}active{% endif %}" href="{% url 'admin_parts' %}">Склад</a>
+  <a class="{% if active == 'employees' %}active{% endif %}" href="{% url 'admin_employees' %}">Сотрудники</a>
+  <a class="{% if active == 'users' %}active{% endif %}" href="{% url 'admin_users' %}">Пользователи</a>
+  <a class="{% if active == 'stats' %}active{% endif %}" href="{% url 'admin_stats' %}">Статистика</a>
+</nav>

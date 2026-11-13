@@ -1,0 +1,8 @@
+<div class="status-stepper{% if mini %} mini{% endif %}" aria-label="Этапы ремонта">
+  {% for value, label in request.STATUS_CHOICES %}
+    <div class="status-step {% if forloop.counter0 < request.status_index %}done{% elif forloop.counter0 == request.status_index %}current{% endif %}">
+      <div class="bar"></div>
+      {{ label }}
+    </div>
+  {% endfor %}
+</div>

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Пользователи — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Пользователи</h1>
+        <p>Управление доступом клиентов и сотрудников. Блокировка не удаляет историю заявок.</p>
+      </div>
+    </div>
+    {% include "admin_panel/_nav.html" with active="users" %}
+
+    <div class="filter-pills mb-4">
+      {% for value, label in roles %}
+        <a class="pill {% if role == value %}active{% endif %}" href="{% url 'admin_users' %}?role={{ value }}">{{ label }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="panel">
+      <div class="table-responsive">
+        <table class="table-modern">
+          <thead><tr><th>Пользователь</th><th>Контакты</th><th>Заявок</th><th>Регистрация</th><th>Доступ</th><th></th></tr></thead>
+          <tbody>
+            {% for item in users %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar">{{ item.first_name|default:item.username|first|upper }}</span>
+                    <div><div class="cell-strong">{{ item.full_name }}</div><div class="cell-muted">@{{ item.username }}</div></div>
+                  </div>
+                </td>
+                <td>{{ item.phone|default:"—" }}<div class="cell-muted">{{ item.email|default:"—" }}</div></td>
+                <td>{% if item.role == "client" %}{{ item.requests_count }}{% else %}—{% endif %}</td>
+                <td class="cell-muted">{{ item.date_joined|date:"d.m.Y" }}</td>
+                <td>{% if item.is_active %}<span class="badge-soft green">активен</span>{% else %}<span class="badge-soft red">заблокирован</span>{% endif %}</td>
+                <td>
+                  {% if item.pk != user.pk %}
+                    <form method="post" action="{% url 'user_toggle' item.pk %}">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-secondary" type="submit">{% if item.is_active %}Заблокировать{% else %}Разблокировать{% endif %}</button>
+                    </form>
+                  {% else %}
+                    <span class="cell-muted">это вы</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6"><div class="empty-state"><h3>Пользователей нет</h3></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

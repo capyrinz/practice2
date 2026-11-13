@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{% if employee %}Сотрудник — {{ employee.full_name }}{% else %}Новый сотрудник{% endif %} — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container" style="max-width:760px">
+    <div class="breadcrumbs"><a href="{% url 'admin_employees' %}">Сотрудники</a> / {% if employee %}{{ employee.full_name }}{% else %}Новый сотрудник{% endif %}</div>
+    <div class="page-head"><div><h1>{% if employee %}Редактирование сотрудника{% else %}Новый сотрудник{% endif %}</h1></div></div>
+    <form class="form-card" method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+      {% for field in form %}
+        <div class="form-group">
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      {% if employee %}
+        <div class="form-note">Пароль не отображается. Сменить его можно в служебной панели <code>/django-admin/</code>.</div>
+      {% endif %}
+      <div class="form-actions">
+        <button class="btn btn-brand" type="submit">Сохранить</button>
+        <a class="btn btn-outline-secondary" href="{% url 'admin_employees' %}">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

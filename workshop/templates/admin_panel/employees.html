@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Сотрудники — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Сотрудники</h1>
+        <p>Мастера и администраторы мастерской. Заблокированный сотрудник не сможет войти.</p>
+      </div>
+      <a class="btn btn-brand" href="{% url 'employee_create' %}">+ Добавить сотрудника</a>
+    </div>
+    {% include "admin_panel/_nav.html" with active="employees" %}
+
+    <div class="panel">
+      <div class="table-responsive">
+        <table class="table-modern">
+          <thead><tr><th>Сотрудник</th><th>Роль</th><th>Контакты</th><th>Активных заявок</th><th>Доступ</th><th></th></tr></thead>
+          <tbody>
+            {% for employee in employees %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar">{{ employee.first_name|default:employee.username|first|upper }}</span>
+                    <div>
+                      <div class="cell-strong">{{ employee.full_name }}</div>
+                      <div class="cell-muted">@{{ employee.username }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge-soft blue">{{ employee.get_role_display }}</span></td>
+                <td>{{ employee.phone|default:"—" }}<div class="cell-muted">{{ employee.email|default:"—" }}</div></td>
+                <td>{% if employee.role == "master" %}{{ employee.active_requests }}{% else %}<span class="cell-muted">—</span>{% endif %}</td>
+                <td>{% if employee.is_active %}<span class="badge-soft green">активен</span>{% else %}<span class="badge-soft red">заблокирован</span>{% endif %}</td>
+                <td>
+                  <div class="row-actions">
+                    <a class="btn btn-sm btn-soft" href="{% url 'employee_edit' employee.pk %}">Изменить</a>
+                    {% if employee.pk != user.pk %}
+                      <form method="post" action="{% url 'employee_toggle' employee.pk %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">{% if employee.is_active %}Заблокировать{% else %}Разблокировать{% endif %}</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6"><div class="empty-state"><h3>Сотрудников нет</h3><p>Добавьте мастера, чтобы назначать заявки.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

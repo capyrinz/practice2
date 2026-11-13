@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Услуги — панель администратора{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Услуги</h1>
+        <p>Каталог услуг и ориентировочные цены. Неактивные услуги скрыты с сайта.</p>
+      </div>
+      <a class="btn btn-brand" href="{% url 'service_create' %}">+ Добавить услугу</a>
+    </div>
+    {% include "admin_panel/_nav.html" with active="services" %}
+
+    <div class="panel">
+      <div class="table-responsive">
+        <table class="table-modern">
+          <thead><tr><th>Услуга</th><th>Цена от</th><th>Срок</th><th>Заявок</th><th>Статус</th><th></th></tr></thead>
+          <tbody>
+            {% for service in services %}
+              <tr>
+                <td>
+                  <div class="cell-strong">{{ service.name }}</div>
+                  <div class="cell-muted">{{ service.description|truncatechars:90|default:"—" }}</div>
+                </td>
+                <td class="cell-strong">{{ service.price_from|rub }}</td>
+                <td>{{ service.duration_days }} дн.</td>
+                <td>{{ service.requests_count }}</td>
+                <td>
+                  {% if service.is_active %}<span class="badge-soft green">активна</span>
+                  {% else %}<span class="badge-soft red">скрыта</span>{% endif %}
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <a class="btn btn-sm btn-soft" href="{% url 'service_edit' service.pk %}">Изменить</a>
+                    <form method="post" action="{% url 'service_toggle' service.pk %}">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-secondary" type="submit">{% if service.is_active %}Скрыть{% else %}Вернуть{% endif %}</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6"><div class="empty-state"><h3>Услуг пока нет</h3><p>Добавьте первую услугу в каталог.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

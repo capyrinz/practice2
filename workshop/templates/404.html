@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Страница не найдена — Мастер+{% endblock %}
+{% block content %}
+<div class="container page-shell" style="max-width:720px">
+  <div class="panel">
+    <div class="empty-state">
+      <div class="empty-icon">🧭</div>
+      <h3>Страница не найдена</h3>
+      <p>Возможно, ссылка устарела или в адресе есть опечатка.</p>
+      <a class="btn btn-brand" href="{% url 'home' %}">На главную</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

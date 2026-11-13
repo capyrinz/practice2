@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Заявки — панель администратора{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Заявки</h1>
+        <p>Найдено: {{ page.paginator.count }}. Назначайте мастеров и контролируйте статусы.</p>
+      </div>
+      <a class="btn btn-soft" href="{% url 'admin_kanban' %}">Kanban-доска →</a>
+    </div>
+    {% include "admin_panel/_nav.html" with active="requests" %}
+
+    <div class="panel mb-4">
+      <div class="panel-body">
+        <form class="row g-2 align-items-end" method="get">
+          <div class="col-lg-4 col-md-6">
+            <label class="form-label" for="q">Поиск</label>
+            <input class="form-control" id="q" type="search" name="q" value="{{ query }}" placeholder="Номер, клиент, модель, описание">
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label" for="status">Статус</label>
+            <select class="form-select" id="status" name="status">
+              <option value="">Все статусы</option>
+              {% for value, label in statuses %}
+                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label" for="master">Мастер</label>
+            <select class="form-select" id="master" name="master">
+              <option value="">Все мастера</option>
+              {% for master in masters %}
+                <option value="{{ master.pk }}" {% if master_filter == master.pk|stringformat:"s" %}selected{% endif %}>{{ master.full_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-6 d-flex gap-2">
+            <button class="btn btn-brand flex-fill" type="submit">Фильтр</button>
+            <a class="btn btn-outline-secondary" href="{% url 'admin_requests' %}">Сброс</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-responsive">
+        <table class="table-modern">
+          <thead>
+            <tr><th>№</th><th>Клиент</th><th>Устройство</th><th>Мастер</th><th>Стоимость</th><th>Статус</th><th>Создана</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for request in requests %}
+              <tr>
+                <td class="cell-strong">{{ request.number }}</td>
+                <td>{{ request.client.full_name }}<div class="cell-muted">{{ request.client.phone|default:"—" }}</div></td>
+                <td>{{ request.get_device_type_display }}{% if request.device_model %}<div class="cell-muted">{{ request.device_model }}</div>{% endif %}</td>
+                <td>{% if request.master %}{{ request.master.full_name }}{% else %}<span class="badge-soft red">не назначен</span>{% endif %}</td>
+                <td>{{ request.total_cost|rub }}</td>
+                <td><span class="badge-status {{ request.status_class }}">{{ request.get_status_display }}</span></td>
+                <td class="cell-muted">{{ request.created_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                  <div class="row-actions">
+                    <a class="btn btn-sm btn-soft" href="{% url 'request_detail' request.pk %}">Открыть</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'admin_assign' request.pk %}">Мастер</a>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><h3>Заявок не найдено</h3><p>Измените фильтры или сбросьте поиск.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if page.paginator.num_pages > 1 %}
+      <nav class="mt-4" aria-label="Страницы">
+        <ul class="pagination justify-content-center">
+          {% if page.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page.previous_page_number }}&status={{ status_filter }}&master={{ master_filter }}&q={{ query }}">← Назад</a></li>
+          {% endif %}
+          <li class="page-item disabled"><span class="page-link">Стр. {{ page.number }} из {{ page.paginator.num_pages }}</span></li>
+          {% if page.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page.next_page_number }}&status={{ status_filter }}&master={{ master_filter }}&q={{ query }}">Вперёд →</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

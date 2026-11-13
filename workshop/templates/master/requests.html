@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load workshop_extras %}
+{% block title %}Мои работы — Мастер+{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>Мои работы</h1>
+        <p>Назначенные заявки. Всего: {{ total }}. Меняйте статус, добавляйте запчасти и комментарии.</p>
+      </div>
+    </div>
+
+    <div class="filter-pills mb-4">
+      <a class="pill {% if not status_filter %}active{% endif %}" href="{% url 'master_requests' %}">Все <span class="pill-count">{{ total }}</span></a>
+      {% for value, label in statuses %}
+        <a class="pill {% if status_filter == value %}active{% endif %}" href="{% url 'master_requests' %}?status={{ value }}">
+          {{ label }} <span class="pill-count">{{ counts|dict_get:value|default:0 }}</span>
+        </a>
+      {% endfor %}
+    </div>
+
+    {% if requests %}
+      <div class="request-list">
+        {% for request in requests %}
+          <article class="request-card">
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="rc-number">{{ request.number }}</span>
+                <span class="badge-status {{ request.status_class }}">{{ request.get_status_display }}</span>
+              </div>
+              <div class="rc-device">{{ request.get_device_type_display }}{% if request.device_model %} · {{ request.device_model }}{% endif %}</div>
+              <div class="rc-desc">{{ request.description }}</div>
+              <div class="rc-meta">
+                <span>Клиент: {{ request.client.full_name }}</span>
+                <span>{{ request.client.phone|default:"телефон не указан" }}</span>
+                <span>Принята {{ request.created_at|date:"d.m.Y" }}</span>
+              </div>
+            </div>
+            <div>
+              {% include "partials/status_stepper.html" with mini=True %}
+            </div>
+            <div class="rc-right">
+              <div class="text-end">
+                <div class="cell-muted">Стоимость</div>
+                <div class="cell-strong">{{ request.total_cost|rub }}</div>
+              </div>
+              <a class="btn btn-brand btn-sm" href="{% url 'request_detail' request.pk %}">Работать с заявкой →</a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="panel">
+        <div class="empty-state">
+          <div class="empty-icon">🧰</div>
+          <h3>Назначенных заявок нет</h3>
+          <p>Администратор назначит вам заявки — они появятся здесь.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
